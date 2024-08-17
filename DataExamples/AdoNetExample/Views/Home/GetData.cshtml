@@ -1,0 +1,23 @@
+﻿@using AdoNetExample.Models
+@model List<Student>
+
+<h1>Student List</h1>
+<table>
+    <thead>
+        <tr>
+            <th>FirstName</th>
+            <th>LastName</th>
+            <th>Age</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.FirstName</td>
+                <td>@item.LastName</td>
+                <td>@item.Age</td>
+            </tr>
+        }
+    </tbody>
+</table>
