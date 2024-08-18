@@ -3,6 +3,19 @@
 @{
     ViewData["Title"] = "Home Page";
 }
+<div class="d-flex mb-3">
+    <form asp-action="QuerySyntax" method="GET" class="m-3">
+        <input type="submit" value="Query Syntax" class="btn btn-primary" />
+    </form>
+    <form asp-action="MethodSyntax" method="GET" class="m-3">
+        <input type="submit" value="Method Syntax" class="btn btn-primary" />
+    </form>
+    <a href="@Url.Action("GetStudentByDepartment","Home")" class="btn btn-primary m-3">Procedure Bölüme Göre Öğrenciler</a>
+</div>
+<p>
+    <a asp-action="Create" class="btn btn-secondary">Yeni Öğrenci Ekle</a>
+</p>
+
 <h1>Öğrenciler</h1>
 
 <table>

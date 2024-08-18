@@ -1,0 +1,47 @@
+﻿@model IEnumerable<EntityFrameworkExample.Models.Student>
+@{
+    var studets = ViewData["Students"] as IEnumerable<EntityFrameworkExample.Models.Student>;
+}
+
+<h1>Bölüme Göre Öğrenciler</h1>
+<form method="POST" action="@Url.Action("GetStudentByDepartment","Home")">
+    <div class="form-group">
+        <label for="department">Bölüm</label>
+        <input type="text" id="department" name="department" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Öğrencileri Getir</button>
+</form>
+
+<h1>Öğrenci ve Kurslar</h1>
+@if (studets != null && studets.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Öğrenci adı</th>
+                <th>Öğrenci Yaşı</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var student in studets)
+            {
+                <tr>
+                    <td>
+                        @student.Name
+                    </td>
+                    <td>
+                        @student.Age
+                    </td>
+                    <td>
+                        @student.Department
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+}
+else
+{
+    <p>Belirtilen Bölüme ait öğrenci bulunamadı.</p>
+}

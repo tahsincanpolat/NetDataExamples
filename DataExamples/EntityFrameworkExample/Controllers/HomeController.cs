@@ -1,6 +1,9 @@
 using EntityFrameworkExample.Data;
+using EntityFrameworkExample.Extensions;
 using EntityFrameworkExample.Models;
+using EntityFrameworkExample.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
 namespace EntityFrameworkExample.Controllers
@@ -35,5 +38,185 @@ namespace EntityFrameworkExample.Controllers
 
             return View(student);
         }
+
+        // Yeni öðrenci eklemek için view
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        // Öðrenci oluþturmak için Post Aksiyonu
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Create([Bind("Id,Name,Age,Department")] Student student)
+        {
+            if (ModelState.IsValid)
+            {
+                // Model geçerli ise yeni öðrenci ekle
+                _context.Add(student);
+                _context.SaveChanges();
+                // baþarýyla eklendiyse anasayfaya yönlendir.
+                return RedirectToAction("Index");
+            }
+            return View(student);
+        }
+
+        // Öðrenci düzenlemek için formu döndüren aksiyon
+        public IActionResult Edit(int id)
+        {
+            // ID ye göre öðrenciye bul
+            var student = _context.Students.Find(id);
+            if(student == null)
+            {
+                // öðrenciyi bulamazsa 404 sayfasýna yönlendir.
+                return NotFound();
+            }
+
+            return View(student);
+        }
+
+        // Öðrenci düzenlemek iþemini iþleyen POST aksiyonu
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(int id, [Bind("Id,Name,Age,Department")] Student student)
+        {
+            if (id != student.Id)
+            {
+                // öðrenciyi bulamazsa 404 sayfasýna yönlendir.
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    // Öðrenci bilgilerini güncelle
+                    _context.Students.Update(student);
+                    _context.SaveChanges();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    // Eðer bir hata oluþursa öðrencinin olup olmadýðýný kontrol.
+                    if (!StudentExists(student.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult Delete(int id)
+        {
+            // id ye göre öðrenciyi bul
+            var student = _context.Students.Find(id);
+            if(student == null)
+            {
+                return NotFound();
+            }
+
+            return View(student);
+        }
+
+        [HttpPost]
+        [AutoValidateAntiforgeryToken]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            // id ye göre öðrenciyi bul
+            var student = _context.Students.Find(id);
+            if (student != null)
+            {
+                // Öðrenciyi veritabanýndaki tablodan sil
+                _context.Students.Remove(student);
+                _context.SaveChanges();
+            }
+            // silme iþlemi baþarýlý þekilde gerçekleþirse anasayafaya yönlendir.
+
+            return RedirectToAction("Index");
+        }
+
+        private bool StudentExists(int id)
+        {
+           return _context.Students.Any(s => s.Id == id);
+        }
+
+        // Yaþý 18'den büyük olan öðrencileri sorgulayan LINQ sorgusu (QuerySyntax (Sorgu söz dizimi))
+        public IActionResult QuerySyntax()
+        {
+            var students = (from s in _context.Students
+                            where s.Age>18
+                            select s).ToList();
+
+            return View("Index",students);
+        }
+
+        // Yaþý 18'den küçük olan öðrencileri sorgulayan LINQ sorgusu (MethodSyntax (Method söz dizimi))
+        public IActionResult MethodSyntax()
+        {
+            var students = _context.Students
+                .Where(s => s.Age<18)
+                .ToList();
+
+            return View("Index", students);
+        }
+
+        // Öðrenci tablosu ile Kurs tablosunu Student Id ye göre join eden aksiyon
+        public IActionResult Join()
+        {
+            var stundentCourses = (from student in _context.Students 
+                                   join course in _context.Courses on student.Id equals course.StudentId
+                                   select new
+                                   { 
+                                    StudentName = student.Name,
+                                    CourseTitle = course.Title
+                                   }).ToList();
+
+            return View(stundentCourses);
+        }
+
+        public IActionResult GroupByDepartment()
+        {
+            var groupedStudents = _context.Students
+                .GroupBy(s => s.Department)
+                .Select(g => new GroupedStudentViewModel
+                {
+                    Department = g.Key,
+                    Students = g.ToList()
+                })
+                .ToList();
+
+            return View(groupedStudents);
+        }
+
+        public IActionResult CustomExtensionMethod()
+        {
+            var students = _context.Students.ToList();
+            // Custom oluþturduðumuz extension method yaþ aralýðýna göre gruplama yapar.
+            var groupedStudentByAge = students.GroupByAgeRange();
+            return View(groupedStudentByAge);
+        }
+
+        public IActionResult GetStudentByDepartment()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult GetStudentByDepartment(string department)
+        {
+            // Sql tarafýnda oluþturuduðumuz procedure ü tetikledik.
+            var students = _context.Students
+                .FromSqlInterpolated($"EXEC GetStudentByDepartment {department}")
+                .ToList();
+            ViewData["Students"] = students;
+
+            return View();
+        }
+
     }
 }

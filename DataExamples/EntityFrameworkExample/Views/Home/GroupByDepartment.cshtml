@@ -1,0 +1,29 @@
+﻿@model IEnumerable<EntityFrameworkExample.ViewModels.GroupedStudentViewModel>
+
+<h1>Öğrenci ve Kurslar</h1>
+@foreach (var group in Model)
+{   
+    <h3>@group.Department</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Öğrenci adı</th>
+                <th>Öğrenci Yaşı</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var student in group.Students)
+            {
+                <tr>
+                    <td>
+                        @student.Name
+                    </td>
+                    <td>
+                        @student.Age
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+}
