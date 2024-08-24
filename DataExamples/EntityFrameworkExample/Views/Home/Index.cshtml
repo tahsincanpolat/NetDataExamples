@@ -11,6 +11,9 @@
         <input type="submit" value="Method Syntax" class="btn btn-primary" />
     </form>
     <a href="@Url.Action("GetStudentByDepartment","Home")" class="btn btn-primary m-3">Procedure Bölüme Göre Öğrenciler</a>
+    <button id="AddStudentsWithTransaction" class="btn btn-primary m-3">Öğrencileri Transaction ile ekle</button>
+    <a asp-action="RawSql" asp-controller="Home" class="btn btn-primary m-3">Raw Sql ile Öğrenciler</a>
+    <a asp-action="BulkInsert" asp-controller="Home" class="btn btn-primary m-3">BulkInsert</a>
 </div>
 <p>
     <a asp-action="Create" class="btn btn-secondary">Yeni Öğrenci Ekle</a>
@@ -57,3 +60,32 @@
         }        
     </tbody>
 </table>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            // Burada örnek olarak gönderilecek students verisi
+            var students = [
+                { Name: "Ali", Age: 20 , Department:null},
+                { Name: "Ayşe", Age: 25, Department: "Elektronik" }
+            ]
+
+            $("#AddStudentsWithTransaction").click(function () {
+                $.ajax({
+                    url: '@Url.Action("AddStudentsWithTransaction", "Home")', // Gideceği Action url i
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(students),
+                    success: function (result) {
+                        alert("Öğrenciler başarıyla eklendi.")
+                        location.reload()
+                    },
+                    error: function (xhr, status, error) {
+                        alert("Bir Hata oluşu: " + error)
+                    }
+                })
+            }) 
+        })
+
+    </script>
+}

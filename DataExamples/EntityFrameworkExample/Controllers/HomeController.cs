@@ -1,3 +1,4 @@
+using EFCore.BulkExtensions;
 using EntityFrameworkExample.Data;
 using EntityFrameworkExample.Extensions;
 using EntityFrameworkExample.Models;
@@ -14,7 +15,7 @@ namespace EntityFrameworkExample.Controllers
 
         public HomeController(SchoolContext context)
         {
-                _context = context;
+            _context = context;
         }
         // Anasayfa için tüm öðrencileri listeleyen aksiyon
         public IActionResult Index()
@@ -30,7 +31,7 @@ namespace EntityFrameworkExample.Controllers
             // ID ye göre öðrenciyi bul
             var student = _context.Students.Find(id);
 
-            if(student == null)
+            if (student == null)
             {
                 // Öðrenci bulunamazsa 404 sayfasýna yönlendir.
                 return NotFound();
@@ -66,7 +67,7 @@ namespace EntityFrameworkExample.Controllers
         {
             // ID ye göre öðrenciye bul
             var student = _context.Students.Find(id);
-            if(student == null)
+            if (student == null)
             {
                 // öðrenciyi bulamazsa 404 sayfasýna yönlendir.
                 return NotFound();
@@ -115,7 +116,7 @@ namespace EntityFrameworkExample.Controllers
         {
             // id ye göre öðrenciyi bul
             var student = _context.Students.Find(id);
-            if(student == null)
+            if (student == null)
             {
                 return NotFound();
             }
@@ -142,24 +143,24 @@ namespace EntityFrameworkExample.Controllers
 
         private bool StudentExists(int id)
         {
-           return _context.Students.Any(s => s.Id == id);
+            return _context.Students.Any(s => s.Id == id);
         }
 
         // Yaþý 18'den büyük olan öðrencileri sorgulayan LINQ sorgusu (QuerySyntax (Sorgu söz dizimi))
         public IActionResult QuerySyntax()
         {
             var students = (from s in _context.Students
-                            where s.Age>18
+                            where s.Age > 18
                             select s).ToList();
 
-            return View("Index",students);
+            return View("Index", students);
         }
 
         // Yaþý 18'den küçük olan öðrencileri sorgulayan LINQ sorgusu (MethodSyntax (Method söz dizimi))
         public IActionResult MethodSyntax()
         {
             var students = _context.Students
-                .Where(s => s.Age<18)
+                .Where(s => s.Age < 18)
                 .ToList();
 
             return View("Index", students);
@@ -168,12 +169,12 @@ namespace EntityFrameworkExample.Controllers
         // Öðrenci tablosu ile Kurs tablosunu Student Id ye göre join eden aksiyon
         public IActionResult Join()
         {
-            var stundentCourses = (from student in _context.Students 
+            var stundentCourses = (from student in _context.Students
                                    join course in _context.Courses on student.Id equals course.StudentId
                                    select new
-                                   { 
-                                    StudentName = student.Name,
-                                    CourseTitle = course.Title
+                                   {
+                                       StudentName = student.Name,
+                                       CourseTitle = course.Title
                                    }).ToList();
 
             return View(stundentCourses);
@@ -218,5 +219,50 @@ namespace EntityFrameworkExample.Controllers
             return View();
         }
 
+        [HttpPost("Transaction")]
+        public IActionResult AddStudentsWithTransaction([FromBody] List<Student> students) //  [{"Name":"Ali","Age":20,"Department":"Bilgisayar"},{"Name":"Ayþe","Age":25,"Department":"Elektronik"}]
+        {
+            using var transaction = _context.Database.BeginTransaction();
+            try
+            {
+                _context.Students.AddRange(students);
+                _context.SaveChanges();
+                transaction.Commit();
+            }
+            catch (Exception)
+            {
+                transaction.Rollback();
+                // Hata durumunu döndürebiliriz.
+                return StatusCode(500, "Öðrenciler Eklenirken bir hata oluþtu.");
+
+            }
+            // Baþarýlý durumda 200 döndürecek.
+            return Ok();
+        }
+
+        // Ham Sql (Raw sql) sorgu ile Öðrencileri Listeleme
+
+        public IActionResult RawSql()
+        {
+            var students = _context.Students
+                    .FromSqlRaw("SELECT * FROM Students WHERE Age > 18")
+                    .ToList();
+
+            return View("Index", students);
+        }
+
+        // EfCore BulkExtensions paketi kullanarak toplu öðrenci ekleme
+        public IActionResult BulkInsert()
+        {
+            var students = new List<Student>()
+            {
+                new Student() { Name = "Ahmet", Age = 20, Department = "Endüstri" },
+                new Student() { Name = "Elif", Age = 25, Department = "Mekatronik" }
+            };
+
+            _context.BulkInsert(students);
+
+            return RedirectToAction("Index");
+        }
     }
 }
