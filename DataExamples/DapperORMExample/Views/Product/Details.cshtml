@@ -1,0 +1,24 @@
+﻿@model Product
+
+<h1>Product Details</h1>
+<div>
+    <h4>Product</h4>
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class="col-sm-2">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Price)
+        </dt>
+        <dd class="col-sm-2">
+            @Html.DisplayFor(model => model.Price)
+        </dd>
+    </dl>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.ProductId">Edit</a>
+        <a asp-action="Index">Back To Homepage</a>
+    </div>
+</div>
